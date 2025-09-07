@@ -121,6 +121,12 @@ export function InvoicePreview({ invoice, className = "" }: InvoicePreviewProps)
               <span className="text-gray-600">Discount ({invoice.discountRate}%):</span>
               <span className="text-green-600" data-testid="preview-discount-amount">-{invoice.currencySymbol}{totals.discountAmount.toFixed(2)}</span>
             </div>
+            {totals.shippingFee > 0 && (
+              <div className="flex justify-between py-1">
+                <span className="text-gray-600">Shipping:</span>
+                <span className="text-gray-900" data-testid="preview-shipping-amount">{invoice.currencySymbol}{totals.shippingFee.toFixed(2)}</span>
+              </div>
+            )}
             <div className="border-t border-gray-300 mt-2 pt-2">
               <div className="flex justify-between">
                 <span className="text-lg font-bold text-gray-900">Total:</span>
@@ -132,19 +138,9 @@ export function InvoicePreview({ invoice, className = "" }: InvoicePreviewProps)
           </div>
         </div>
 
-        {/* Preview Notes */}
-        {invoice.notes.trim() && (
-          <div className="mb-6" data-testid="preview-notes-section">
-            <h3 className="font-semibold text-gray-900 mb-2">Notes:</h3>
-            <p className="text-gray-600 whitespace-pre-line" data-testid="preview-notes">
-              {invoice.notes}
-            </p>
-          </div>
-        )}
-
         {/* Preview Payment Methods */}
         {invoice.paymentMethods && invoice.paymentMethods.length > 0 && (
-          <div data-testid="preview-payment-methods-section">
+          <div className="mb-6" data-testid="preview-payment-methods-section">
             <h3 className="font-semibold text-gray-900 mb-3">Payment Information:</h3>
             <div className="space-y-3">
               {invoice.paymentMethods.map((method, index) => (
@@ -205,6 +201,16 @@ export function InvoicePreview({ invoice, className = "" }: InvoicePreviewProps)
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Preview Notes */}
+        {invoice.notes.trim() && (
+          <div className="mb-6" data-testid="preview-notes-section">
+            <h3 className="font-semibold text-gray-900 mb-2">Notes:</h3>
+            <p className="text-gray-600 whitespace-pre-line" data-testid="preview-notes">
+              {invoice.notes}
+            </p>
           </div>
         )}
       </CardContent>

@@ -32,6 +32,7 @@ export interface Invoice {
   items: InvoiceItem[];
   taxRate: number;
   discountRate: number;
+  shippingFee: number;
   notes: string;
   paymentMethods: string[];
   paymentDetails: PaymentDetails;
@@ -46,5 +47,6 @@ export interface InvoiceCalculations {
   subtotal: number;
   taxAmount: number;
   discountAmount: number;
+  shippingFee: number;
   total: number;
 }

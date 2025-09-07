@@ -77,6 +77,7 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
       items: [createEmptyItem()],
       taxRate: 0,
       discountRate: 0,
+      shippingFee: 0,
       notes: '',
       paymentMethods: currencyInfo.methods,
       paymentDetails: {},
@@ -143,10 +144,19 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
 
   const handlePaymentMethodChange = (method: string, checked: boolean) => {
     const currentMethods = formData.paymentMethods || [];
+    let updatedMethods: string[];
+    
     if (checked) {
-      updateField('paymentMethods', [...currentMethods, method]);
+      // Add method if not already included
+      if (!currentMethods.includes(method)) {
+        updatedMethods = [...currentMethods, method];
+      } else {
+        updatedMethods = currentMethods;
+      }
     } else {
-      updateField('paymentMethods', currentMethods.filter(m => m !== method));
+      // Remove method
+      updatedMethods = currentMethods.filter(m => m !== method);
+      
       // Clear payment details for removed method
       const updatedDetails = { ...formData.paymentDetails };
       switch (method) {
@@ -171,8 +181,20 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
           delete updatedDetails.paymentLink;
           break;
       }
-      updateField('paymentDetails', updatedDetails);
+      
+      // Update both payment methods and details in a single update
+      const updated = { 
+        ...formData, 
+        paymentMethods: updatedMethods, 
+        paymentDetails: updatedDetails 
+      };
+      setFormData(updated);
+      onInvoiceChange(updated);
+      return;
     }
+    
+    // Update payment methods
+    updateField('paymentMethods', updatedMethods);
   };
 
   const updatePaymentDetail = (field: keyof PaymentDetails, value: string) => {
@@ -206,8 +228,16 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
   const handleCurrencyChange = (currencyCode: string) => {
     const currency = currencyOptions.find(c => c.code === currencyCode);
     if (currency) {
-      updateField('currencySymbol', currency.symbol);
-      updateField('currencyCode', currency.code);
+      // Update all currency fields in a single state update
+      const updatedFormData = {
+        ...formData,
+        currencySymbol: currency.symbol,
+        currencyCode: currency.code,
+        currency: currency.code
+      };
+      
+      setFormData(updatedFormData);
+      onInvoiceChange(updatedFormData);
     }
   };
 
@@ -305,6 +335,7 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
               <Select
                 value={formData.currencyCode || 'USD'}
                 onValueChange={handleCurrencyChange}
+                defaultValue="USD"
               >
                 <SelectTrigger className="w-full" data-testid="select-currency">
                   <SelectValue placeholder="Select currency" />
@@ -550,6 +581,23 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
                 -{formData.currencySymbol}{totals.discountAmount.toFixed(2)}
               </span>
             </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <span className="text-muted-foreground">Shipping:</span>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.shippingFee}
+                  onChange={(e) => updateField('shippingFee', Number(e.target.value))}
+                  className="w-20 h-8 px-2 text-sm"
+                  data-testid="input-shipping-fee"
+                />
+              </div>
+              <span className="font-medium" data-testid="text-shipping-amount">
+                {formData.currencySymbol}{totals.shippingFee.toFixed(2)}
+              </span>
+            </div>
             <div className="border-t border-border pt-3">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold">Total:</span>
@@ -561,9 +609,21 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
           </div>
         </div>
 
+        {/* Notes Section */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Notes</h3>
+          <Textarea
+            rows={4}
+            value={formData.notes}
+            onChange={(e) => updateField('notes', e.target.value)}
+            placeholder="Additional notes or payment terms..."
+            data-testid="input-notes"
+          />
+        </div>
+
         {/* Payment Methods Section */}
         <div className="space-y-6">
-          <h3 className="text-lg font-semibold">Payment Methods</h3>
+          <h3 className="text-lg font-semibold">Payment Information</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {paymentOptions.map((method) => {
               const isChecked = formData.paymentMethods?.includes(method) || false;
@@ -715,17 +775,6 @@ export function InvoiceForm({ invoice, onInvoiceChange, onPreview, onPrint }: In
                 </div>
               </Card>
             )}
-          </div>
-          {/* Notes Section - moved under payment methods */}
-          <div className="space-y-4">
-            <h4 className="text-md font-medium">Notes</h4>
-            <Textarea
-              rows={4}
-              value={formData.notes}
-              onChange={(e) => updateField('notes', e.target.value)}
-              placeholder="Additional notes or payment terms..."
-              data-testid="input-notes"
-            />
           </div>
         </div>
 

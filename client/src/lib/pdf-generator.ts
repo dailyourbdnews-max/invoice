@@ -6,12 +6,14 @@ export function calculateInvoiceTotals(invoice: Invoice): InvoiceCalculations {
   const subtotal = invoice.items.reduce((sum, item) => sum + item.amount, 0);
   const taxAmount = (subtotal * invoice.taxRate) / 100;
   const discountAmount = (subtotal * invoice.discountRate) / 100;
-  const total = subtotal + taxAmount - discountAmount;
+  const shippingFee = invoice.shippingFee || 0;
+  const total = subtotal + taxAmount - discountAmount + shippingFee;
 
   return {
     subtotal,
     taxAmount,
     discountAmount,
+    shippingFee,
     total
   };
 }
